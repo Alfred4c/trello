@@ -17,9 +17,9 @@ token = os.getenv('TRELLO_TOKEN', '')
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--card_id',  help='id of card')
+parser.add_argument('--card', '-c', help='id of card')
 args = parser.parse_args()
-card_id = args.card_id
+card_id = args.card
 url = f"https://api.trello.com/1/cards/{card_id}" + "?attachments=true&attachment_fields=url"
 
 params = {
