@@ -20,6 +20,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--card', '-c', help='id of card')
 args = parser.parse_args()
 card_id = args.card
+
+if card_id.startswith('https://trello.com/c/'):
+    card_id = card_id.split(r"/")[4]
+
 url = f"https://api.trello.com/1/cards/{card_id}" + "?attachments=true&attachment_fields=url"
 
 params = {
