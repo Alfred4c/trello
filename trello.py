@@ -9,8 +9,6 @@ import requests
 from PIL import Image
 
 
-import requests
-
 ATTACHMENT_REQUEST_TIMEOUT = 30  # 30 seconds
 
 # Read the API keys from the environment variables
