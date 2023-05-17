@@ -1,7 +1,13 @@
 import argparse
 import os
+import io
 import sys
+import re
 from urllib.parse import unquote
+import hashlib
+import requests
+from PIL import Image
+
 
 import requests
 
@@ -24,6 +30,7 @@ card_id = args.card
 if card_id.startswith('https://trello.com/c/'):
     card_id = card_id.split(r"/")[4]
 
+pattern = r'!\[.*?\]\((.*?)\)'
 url = f"https://api.trello.com/1/cards/{card_id}" + "?attachments=true&attachment_fields=url"
 
 params = {
@@ -43,6 +50,30 @@ def decode_if_url_encoded(string):
         return string
 
 
+def download_and_replace(filepath):
+    directory = os.path.dirname(filepath)
+    images_folder = os.path.join(directory, "images")
+    os.makedirs(images_folder, exist_ok=True)
+    with open(filepath, 'r', encoding='utf-8') as f:
+        content = f.read()
+    for img_url in re.findall(pattern, content):
+        if img_url.startswith("http"):
+            res = requests.get(img_url)
+            md5_digest = hashlib.md5(res.content).hexdigest()
+            file_ext = os.path.splitext(img_url)[-1]
+            if not file_ext:
+                img = Image.open(io.BytesIO(response.content))
+                file_ext = '.' + img.format.lower()
+            img_name = md5_digest + file_ext
+            img_path = os.path.join(images_folder, img_name)
+            with open(img_path, 'wb') as img:
+                img.write(res.content)
+            content = content.replace(img_url, os.path.join("images",img_name))
+    with open(filepath, 'w', encoding='utf-8') as f:
+        f.write(content)
+
+    
+    
 response = requests.get(url, headers=headers, params=params)
 card_data = response.json()
 
@@ -76,3 +107,12 @@ for attachment in attachments:
 with open(f"{card_name}.md", "w", encoding="utf-8") as f:
     f.write(md_content)
 print(f"下载完成！{card_name}.md")
+file_list = [f'{card_name}.md']
+for root, dirs, files in os.walk(f"attachments_{card_id}"):
+    for f in files:
+        if f.endswith('.md'):
+            mdfile_path = os.path.relpath(os.path.join(root, f), os.getcwd())
+            file_list.append(mdfile_path)
+for f in file_list:
+    download_and_replace(f)
+
